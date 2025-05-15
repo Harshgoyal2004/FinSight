@@ -3,10 +3,9 @@
 "use client";
 
 import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
-import { User, onAuthStateChanged, signInWithPopup, signOut as firebaseSignOut } from 'firebase/auth';
+import type { User } from 'firebase/auth';
+import { onAuthStateChanged, signInWithPopup, signOut as firebaseSignOut } from 'firebase/auth';
 import { auth, googleProvider } from '@/lib/firebase';
-import { Button } from '@/components/ui/button'; // For a generic sign-in button
-import { LogIn } from 'lucide-react';
 
 interface AuthContextType {
   user: User | null;
@@ -33,21 +32,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setLoading(true);
     try {
       await signInWithPopup(auth, googleProvider);
-      // onAuthStateChanged will handle setting the user
+      // onAuthStateChanged will handle setting the user and setLoading(false)
     } catch (error) {
       console.error("Error signing in with Google:", error);
-      setLoading(false); // Reset loading on error
+      setLoading(false); // Ensure loading is false on error
     }
   };
 
-  const signOut = async () => { // Corrected this line
+  const signOut = async () => {
     setLoading(true);
     try {
-      await firebaseSignOut(auth);
-      // onAuthStateChanged will handle setting the user to null
+      await firebaseSignOut(auth); // Use the aliased firebaseSignOut
+      // onAuthStateChanged will handle setting the user to null and setLoading(false)
     } catch (error) {
       console.error("Error signing out:", error);
-      setLoading(false); // Reset loading on error
+      setLoading(false); // Ensure loading is false on error
     }
   };
 
@@ -64,19 +63,4 @@ export function useAuth() {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
-}
-
-// Optional: A simple sign-in component if needed elsewhere, or for direct use
-export function SignInButton() {
-  const { signInWithGoogle, loading } = useAuth();
-
-  if (loading) {
-    return <Button disabled>Loading...</Button>;
-  }
-  
-  return (
-    <Button onClick={signInWithGoogle} variant="outline" className="w-full justify-start">
-      <LogIn className="mr-2 h-4 w-4" /> Sign in with Google
-    </Button>
-  );
 }
