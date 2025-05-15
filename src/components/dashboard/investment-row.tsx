@@ -103,7 +103,7 @@ export function InvestmentRow({ investment, onBuy, onSell }: InvestmentRowProps)
           alt={`${investment.name} logo`} 
           width={32} 
           height={32} 
-          className="rounded-full"
+          className="rounded-full flex-shrink-0"
           data-ai-hint="company logo"
           onError={(e) => { 
             const target = e.target as HTMLImageElement;
@@ -111,9 +111,9 @@ export function InvestmentRow({ investment, onBuy, onSell }: InvestmentRowProps)
             target.src = `https://placehold.co/32x32.png?text=${investment.symbol.substring(0,2)}`;
           }}
         />
-        <div>
-          <p className="font-semibold text-foreground">{investment.symbol}</p>
-          <p className="text-xs text-muted-foreground">{investment.name}</p>
+        <div className="min-w-0 flex-1"> {/* Added min-w-0 and flex-1 for proper truncation */}
+          <p className="font-semibold text-foreground truncate">{investment.symbol}</p>
+          <p className="text-xs text-muted-foreground truncate">{investment.name}</p>
         </div>
       </div>
 
@@ -160,7 +160,7 @@ export function InvestmentRow({ investment, onBuy, onSell }: InvestmentRowProps)
       </div>
 
       {/* Actions */}
-      <div className="flex gap-1 sm:gap-2 w-full md:w-auto justify-start md:justify-end items-center">
+      <div className="flex gap-1 sm:gap-2 w-full md:w-1/5 justify-start md:justify-end items-center"> {/* Changed md:w-auto to md:w-1/5 */}
         <Button 
             variant="outline" 
             size="sm" 
