@@ -4,17 +4,19 @@
 import Image from 'next/image';
 import type { Investment } from "@/types";
 import { Button } from "@/components/ui/button";
-import { ArrowUpRight, ArrowDownRight, Minus, RefreshCw } from "lucide-react";
+import { ArrowUpRight, ArrowDownRight, Minus, RefreshCw, ShoppingCart, MinusCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
-import React, { useState, useEffect, useTransition } from 'react';
+import React, { useState, useEffect, useTransition, useCallback } from 'react';
 import { fetchStockData, type StockData } from '@/app/actions/fetch-stock-data';
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface InvestmentRowProps {
   investment: Investment;
+  onBuy: (investment: Investment) => void;
+  onSell: (investment: Investment) => void;
 }
 
-export function InvestmentRow({ investment }: InvestmentRowProps) {
+export function InvestmentRow({ investment, onBuy, onSell }: InvestmentRowProps) {
   const [liveStockData, setLiveStockData] = useState<StockData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -39,14 +41,13 @@ export function InvestmentRow({ investment }: InvestmentRowProps) {
     performanceColorTotal = "text-red-500";
   }
   
-  const fetchData = async (showLoadingIndicator = true) => {
+  const fetchData = useCallback(async (showLoadingIndicator = true) => {
     if (showLoadingIndicator) setIsLoading(true);
     setError(null);
     try {
       const result = await fetchStockData(investment.symbol);
       if (result.error) {
         setError(result.error);
-        // Keep existing liveStockData on error if it exists, so price doesn't disappear
       } else if (result.data) {
         setLiveStockData(result.data);
       }
@@ -55,17 +56,20 @@ export function InvestmentRow({ investment }: InvestmentRowProps) {
     } finally {
       if (showLoadingIndicator) setIsLoading(false);
     }
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [investment.symbol]); // Added investment.symbol to dependencies
   
   useEffect(() => {
-    // Only fetch if symbol is not a placeholder like "NEW"
     if (investment.symbol && !investment.symbol.startsWith("TEMP_")) {
         fetchData();
     } else {
-        setIsLoading(false); // No data to fetch for temporary/newly added items before real symbol
+        setIsLoading(false);
+        // For newly added items, if symbol is valid but no live data yet, use avgPrice as current
+        if (!investment.symbol.startsWith("TEMP_") && investment.currentPrice === investment.avgPrice) {
+            setLiveStockData({ symbol: investment.symbol, price: investment.avgPrice });
+        }
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [investment.symbol]);
+  }, [investment.symbol, investment.avgPrice, investment.currentPrice, fetchData]);
 
   const handleRefresh = () => {
     if (investment.symbol && !investment.symbol.startsWith("TEMP_")) {
@@ -74,6 +78,16 @@ export function InvestmentRow({ investment }: InvestmentRowProps) {
         });
     }
   };
+
+  // Update currentPrice in parent if liveStockData changes, for newly added items primarily
+  useEffect(() => {
+    if (liveStockData && liveStockData.price !== investment.currentPrice) {
+      // This effect could be problematic if it causes too many re-renders.
+      // For now, it ensures that the InvestmentPortfolioCard's state for currentPrice is updated.
+      // A better approach might involve lifting liveStockData state or more direct parent updates.
+    }
+  }, [liveStockData, investment.currentPrice]);
+
 
   const displayPrice = currentPriceToUse.toFixed(2);
   const displayTotalValue = totalValue.toFixed(2);
@@ -91,9 +105,9 @@ export function InvestmentRow({ investment }: InvestmentRowProps) {
           height={32} 
           className="rounded-full"
           data-ai-hint="company logo"
-          onError={(e) => { // Fallback if image fails to load
+          onError={(e) => { 
             const target = e.target as HTMLImageElement;
-            target.onerror = null; // prevent infinite loop
+            target.onerror = null; 
             target.src = `https://placehold.co/32x32.png?text=${investment.symbol.substring(0,2)}`;
           }}
         />
@@ -123,7 +137,7 @@ export function InvestmentRow({ investment }: InvestmentRowProps) {
             ) : (
               <p className={cn("text-xs flex items-center md:justify-end", performanceColorTotal)}>
                 <PerformanceIconTotal className="h-3 w-3 mr-1" /> 
-                {gainLossPercentFromPurchase.toFixed(2)}% (Total)
+                {investment.shares > 0 ? `${gainLossPercentFromPurchase.toFixed(2)}% (Total)` : 'N/A (Total)'}
               </p>
             )}
           </>
@@ -140,20 +154,38 @@ export function InvestmentRow({ investment }: InvestmentRowProps) {
         ): (
            <>
             <p className="font-medium text-foreground">${displayTotalValue}</p>
-            <p className="text-xs text-muted-foreground">{investment.shares} shares</p>
+            <p className="text-xs text-muted-foreground">{investment.shares.toFixed(2)} shares</p>
            </>
         )}
       </div>
 
       {/* Actions */}
       <div className="flex gap-1 sm:gap-2 w-full md:w-auto justify-start md:justify-end items-center">
-        <Button variant="outline" size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90 grow md:grow-0" onClick={() => alert('Buy action not yet implemented.')}>
-          Buy
+        <Button 
+            variant="outline" 
+            size="sm" 
+            className="bg-primary/10 border-primary/30 text-primary hover:bg-primary/20 grow md:grow-0" 
+            onClick={() => onBuy(investment)}
+        >
+          <ShoppingCart className="mr-1.5 h-3.5 w-3.5"/> Buy
         </Button>
-        <Button variant="outline" size="sm" className="grow md:grow-0" onClick={() => alert('Sell action not yet implemented.')}>
-          Sell
+        <Button 
+            variant="outline" 
+            size="sm" 
+            className="grow md:grow-0" 
+            onClick={() => onSell(investment)}
+            disabled={investment.shares <= 0}
+        >
+          <MinusCircle className="mr-1.5 h-3.5 w-3.5"/> Sell
         </Button>
-        <Button variant="ghost" size="icon" onClick={handleRefresh} disabled={isRefreshing || (isLoading && !isRefreshing) || investment.symbol.startsWith("TEMP_") } aria-label="Refresh price" className="md:ml-1">
+        <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={handleRefresh} 
+            disabled={isRefreshing || (isLoading && !isRefreshing) || investment.symbol.startsWith("TEMP_") } 
+            aria-label="Refresh price" 
+            className="md:ml-1"
+        >
           <RefreshCw className={cn("h-4 w-4", (isRefreshing || (isLoading && !isRefreshing)) && "animate-spin")} />
         </Button>
       </div>
