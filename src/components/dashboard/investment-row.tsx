@@ -85,7 +85,7 @@ export function InvestmentRow({ investment, onBuy, onSell }: InvestmentRowProps)
   return (
     <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between p-4 border-b last:border-b-0 hover:bg-secondary/50 transition-colors">
       {/* Asset Info */}
-      <div className="flex items-center gap-3 w-full md:w-2/5 mb-3 md:mb-0">
+      <div className="flex items-center gap-3 w-full md:w-2/5 mb-3 md:mb-0 md:flex-shrink-0">
         <Image 
           src={logoSrc} 
           alt={`${investment.name} logo`} 
@@ -106,7 +106,7 @@ export function InvestmentRow({ investment, onBuy, onSell }: InvestmentRowProps)
       </div>
 
       {/* Current Price & Daily Change */}
-      <div className="w-full md:w-1/5 mb-3 md:mb-0 md:text-right">
+      <div className="w-full md:w-1/5 mb-3 md:mb-0 md:text-right md:flex-shrink-0">
         <span className="md:hidden text-sm font-medium text-muted-foreground mr-1">Price:</span>
         {isLoading && !liveStockData ? (
           <div className="inline-block md:block">
@@ -134,7 +134,7 @@ export function InvestmentRow({ investment, onBuy, onSell }: InvestmentRowProps)
       </div>
       
       {/* Total Value & Shares */}
-      <div className="w-full md:w-1/5 mb-4 md:mb-0 md:text-right">
+      <div className="w-full md:w-1/5 mb-4 md:mb-0 md:text-right md:flex-shrink-0">
          <span className="md:hidden text-sm font-medium text-muted-foreground mr-1">Value:</span>
         {isLoading && !liveStockData ? (
             <div className="inline-block md:block">
@@ -150,7 +150,7 @@ export function InvestmentRow({ investment, onBuy, onSell }: InvestmentRowProps)
       </div>
 
       {/* Actions */}
-      <div className="flex gap-1 sm:gap-2 w-full md:w-1/5 justify-start md:justify-end items-center">
+      <div className="flex flex-wrap gap-1 sm:gap-2 w-full md:w-1/5 justify-start md:justify-end items-center mt-3 md:mt-0 md:flex-shrink-0">
         <Button 
             variant="outline" 
             size="sm" 
