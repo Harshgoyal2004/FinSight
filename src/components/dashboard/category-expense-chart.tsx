@@ -1,3 +1,4 @@
+
 "use client"
 
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend } from "recharts"
@@ -50,10 +51,10 @@ export function CategoryExpenseChart({ data }: CategoryExpenseChartProps) {
               tickLine={false}
               tickMargin={10}
               axisLine={false}
-              // interval={0} // Show all labels
-              // angle={-30} // Angle labels if they overlap
-              // textAnchor="end"
-              // height={60} // Adjust height for angled labels
+              interval={0} // Ensure all labels are attempted to be rendered
+              // angle={-30} // Uncomment if labels overlap
+              // textAnchor="end" // Use with angle
+              // height={70} // Adjust height if using angled labels
             />
             <YAxis 
               tickFormatter={(value) => `$${value}`}
@@ -67,3 +68,4 @@ export function CategoryExpenseChart({ data }: CategoryExpenseChartProps) {
     </Card>
   )
 }
+
