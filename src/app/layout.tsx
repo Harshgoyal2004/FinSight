@@ -1,9 +1,11 @@
+
 import type { Metadata } from 'next';
 import { GeistSans } from 'geist/font/sans';
 import { GeistMono } from 'geist/font/mono';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { SidebarProvider } from "@/components/ui/sidebar";
+import { AuthProvider } from "@/hooks/useAuth"; // Import AuthProvider
 
 const geistSans = GeistSans;
 const geistMono = GeistMono;
@@ -21,10 +23,12 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased`}>
-        <SidebarProvider>
-          {children}
-        </SidebarProvider>
-        <Toaster />
+        <AuthProvider> {/* Wrap with AuthProvider */}
+          <SidebarProvider>
+            {children}
+          </SidebarProvider>
+          <Toaster />
+        </AuthProvider>
       </body>
     </html>
   );

@@ -57,14 +57,13 @@ export function InvestmentRow({ investment, onBuy, onSell }: InvestmentRowProps)
       if (showLoadingIndicator) setIsLoading(false);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [investment.symbol]); // Added investment.symbol to dependencies
+  }, [investment.symbol]); 
   
   useEffect(() => {
     if (investment.symbol && !investment.symbol.startsWith("TEMP_")) {
         fetchData();
     } else {
         setIsLoading(false);
-        // For newly added items, if symbol is valid but no live data yet, use avgPrice as current
         if (!investment.symbol.startsWith("TEMP_") && investment.currentPrice === investment.avgPrice) {
             setLiveStockData({ symbol: investment.symbol, price: investment.avgPrice });
         }
@@ -79,20 +78,9 @@ export function InvestmentRow({ investment, onBuy, onSell }: InvestmentRowProps)
     }
   };
 
-  // Update currentPrice in parent if liveStockData changes, for newly added items primarily
-  useEffect(() => {
-    if (liveStockData && liveStockData.price !== investment.currentPrice) {
-      // This effect could be problematic if it causes too many re-renders.
-      // For now, it ensures that the InvestmentPortfolioCard's state for currentPrice is updated.
-      // A better approach might involve lifting liveStockData state or more direct parent updates.
-    }
-  }, [liveStockData, investment.currentPrice]);
-
-
   const displayPrice = currentPriceToUse.toFixed(2);
   const displayTotalValue = totalValue.toFixed(2);
   const logoSrc = investment.logoUrl || `https://placehold.co/32x32.png?text=${investment.symbol.substring(0,2)}`;
-
 
   return (
     <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between p-4 border-b last:border-b-0 hover:bg-secondary/50 transition-colors">
@@ -111,23 +99,24 @@ export function InvestmentRow({ investment, onBuy, onSell }: InvestmentRowProps)
             target.src = `https://placehold.co/32x32.png?text=${investment.symbol.substring(0,2)}`;
           }}
         />
-        <div className="min-w-0 flex-1"> {/* Added min-w-0 and flex-1 for proper truncation */}
+        <div className="min-w-0 flex-1">
           <p className="font-semibold text-foreground truncate">{investment.symbol}</p>
           <p className="text-xs text-muted-foreground truncate">{investment.name}</p>
         </div>
       </div>
 
       {/* Current Price & Daily Change */}
-      <div className="text-left md:text-right w-full md:w-1/5 mb-2 md:mb-0">
+      <div className="w-full md:w-1/5 mb-3 md:mb-0 md:text-right">
+        <span className="md:hidden text-sm font-medium text-muted-foreground mr-1">Price:</span>
         {isLoading && !liveStockData ? (
-          <>
+          <div className="inline-block md:block">
             <Skeleton className="h-5 w-20 mb-1 md:ml-auto" />
             <Skeleton className="h-3 w-16 md:ml-auto" />
-          </>
+          </div>
         ) : error && !liveStockData ? ( 
-          <p className="text-xs text-destructive">{error}</p>
+          <p className="text-xs text-destructive inline md:block">{error}</p>
         ) : (
-          <>
+          <div className="inline-block md:block">
             <p className="font-medium text-foreground">${displayPrice}</p>
             {apiChangePercent ? (
                  <p className={cn("text-xs flex items-center md:justify-end", parseFloat(apiChangePercent) > 0 ? "text-green-500" : parseFloat(apiChangePercent) < 0 ? "text-red-500" : "text-muted-foreground")}>
@@ -140,27 +129,28 @@ export function InvestmentRow({ investment, onBuy, onSell }: InvestmentRowProps)
                 {investment.shares > 0 ? `${gainLossPercentFromPurchase.toFixed(2)}% (Total)` : 'N/A (Total)'}
               </p>
             )}
-          </>
+          </div>
         )}
       </div>
       
       {/* Total Value & Shares */}
-      <div className="text-left md:text-right w-full md:w-1/5 mb-3 md:mb-0">
+      <div className="w-full md:w-1/5 mb-4 md:mb-0 md:text-right">
+         <span className="md:hidden text-sm font-medium text-muted-foreground mr-1">Value:</span>
         {isLoading && !liveStockData ? (
-            <>
+            <div className="inline-block md:block">
               <Skeleton className="h-5 w-24 mb-1 md:ml-auto" />
               <Skeleton className="h-3 w-12 md:ml-auto" />
-            </>
+            </div>
         ): (
-           <>
+           <div className="inline-block md:block">
             <p className="font-medium text-foreground">${displayTotalValue}</p>
             <p className="text-xs text-muted-foreground">{investment.shares.toFixed(2)} shares</p>
-           </>
+           </div>
         )}
       </div>
 
       {/* Actions */}
-      <div className="flex gap-1 sm:gap-2 w-full md:w-1/5 justify-start md:justify-end items-center"> {/* Changed md:w-auto to md:w-1/5 */}
+      <div className="flex gap-1 sm:gap-2 w-full md:w-1/5 justify-start md:justify-end items-center">
         <Button 
             variant="outline" 
             size="sm" 
